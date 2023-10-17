@@ -14,4 +14,4 @@ if not cookie_loc:
     print("No Cookie Found Onscreen!")
 else:
     cookie_center = pyautogui.center(cookie_loc)
-    pyautogui.moveTo(cookie_center.x,cookie_center.y)
+    pyautogui.click(cookie_center.x,cookie_center.y)

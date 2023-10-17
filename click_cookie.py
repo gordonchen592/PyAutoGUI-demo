@@ -21,4 +21,4 @@ else:
 
     print("Cookie Center: ",cookie_center.x,", ",cookie_center.y, sep="")
     for i in range(num_clicks):
-        pyautogui.moveTo(cookie_center)
+        pyautogui.click(cookie_center)

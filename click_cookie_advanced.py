@@ -86,7 +86,7 @@ if __name__ == "__main__":
     keyboard.add_hotkey(exit_key, on_press, args=[main_pid])
     # determine bounds of region if not specified
     if not bounds:
-        calibrate()
+        bounds = calibrate()
     
     # start thread with clicking loop
     multiprocessing.Process(target=click_cookies, args=(bounds)).start()

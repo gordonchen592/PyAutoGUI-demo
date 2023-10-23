@@ -3,56 +3,20 @@ import os
 import psutil
 import multiprocessing
 import keyboard
-import mouse
 
 # edit vars here
 num_clicks = -1
-cookie_img_file = "img/Cookie-ss-Cropped.png"
+cookie_img_file = "img/Cookie-ss-2160p-Cropped.png"
 pyautogui.PAUSE = 0.02
 exit_key = "esc"
+toggle_key = "`"
 bounds = ()
 
-# code starts here
-def calibrate():
-    while True:
-        bounds = []
-        print("click top left corner")
-        mouse_toggle = False
-        while True:
-            if (not mouse_toggle) and mouse.is_pressed(button='left'):
-                position = pyautogui.position()
-                print(position)
-                bounds.append(position.x)
-                bounds.append(position.y)
-                mouse_toggle = True
-            if mouse_toggle and not mouse.is_pressed(button='left'):
-                mouse_toggle = False
-                break
-        print("click bottom right corner")
-        toggle_ = 0
-        while True:
-            if (not mouse_toggle) and mouse.is_pressed(button='left'):
-                position = pyautogui.position()
-                print(position)
-                width = position.x - bounds[0]
-                height = position.y - bounds[1]
-                bounds.append(width)
-                bounds.append(height)
-                mouse_toggle = True
-            if mouse_toggle and not mouse.is_pressed(button='left'):
-                mouse_toggle = False
-                break
-        print(bounds)
-        print(f"The result is a box from ({bounds[0]},{bounds[1]}) to ({bounds[0]+bounds[2]},{bounds[1]+bounds[3]})")
-        print(f"The region is (top,left,width,height): {bounds}")
-        input_ = input("Is this correct? (y/n): ")
-        if input_ == "y":
-            return tuple(bounds)
-
-def click_cookies(l,t,w,h):
+def click_cookies():
+    global bounds
     cookie_loc = None
-    bounds = (l,t,w,h)
-    print(bounds)
+    if not bounds:
+        bounds = None
     try:
         cookie_loc = pyautogui.locateOnScreen(cookie_img_file, confidence=0.5,region=bounds)
     except pyautogui.ImageNotFoundException:
@@ -65,28 +29,35 @@ def click_cookies(l,t,w,h):
     else:
         cookie_center = pyautogui.center(cookie_loc)
 
-        print("Cookie Center: ",cookie_center.x,", ",cookie_center.y, sep="")
+        print(f"Cookie Found! Clicking {num_clicks if num_clicks >= 0 else 'unlimited'} time{'s' if not num_clicks==1 else ''}")
         if num_clicks > 0:
             for i in range(num_clicks):
                 pyautogui.click(cookie_center)
         else:
             while True:
                 pyautogui.click(cookie_center)
+    print("Clicking Finished")
 
 
-def on_press(main_pid):
-    process = psutil.Process(main_pid)
-    for proc in process.children(recursive=True):
+def on_press_exit(main_pid):
+    main_process = psutil.Process(main_pid)
+    for proc in main_process.children(recursive=True):
         proc.terminate()
-    process.terminate()
+    main_process.terminate()
 
+def on_press_toggle():
+    global click_process
+    if (not click_process.is_alive()):
+        print("Starting Auto Clicker")
+        click_process = multiprocessing.Process(target=click_cookies, args=(bounds))
+        click_process.start()
+    else:
+        print("Stopping Auto Clicker")
+        click_process.terminate()
 
 if __name__ == "__main__":
+    click_process = multiprocessing.Process(target=click_cookies, args=(bounds))
     main_pid = os.getpid()
-    keyboard.add_hotkey(exit_key, on_press, args=[main_pid])
-    # determine bounds of region if not specified
-    if not bounds:
-        bounds = calibrate()
-    
-    # start thread with clicking loop
-    multiprocessing.Process(target=click_cookies, args=(bounds)).start()
+    keyboard.add_hotkey(exit_key, on_press_exit, args=[main_pid])
+    keyboard.add_hotkey(toggle_key, on_press_toggle)
+    keyboard.wait(exit_key)

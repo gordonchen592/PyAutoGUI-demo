@@ -4,26 +4,35 @@ import psutil
 import multiprocessing
 import keyboard
 
-# edit vars here
+# change the confidence ratio if a match still isn't found
+confidence_ = 0.5
+# maximum clicks (less than 0 is infinite)
 num_clicks = -1
+# image file to match to
 cookie_img_file = "img/Cookie-ss-2160p-Cropped.png"
+# time between pyautogui commands (ie. time between clicks)
 pyautogui.PAUSE = 0.02
+
+# keybinds
 exit_key = "esc"
-toggle_key = "`"
+toggle_key = "alt"
+
+# manual override for search region
 bounds = ()
 
 def click_cookies():
-    global bounds
+    global bounds, confidence_
     cookie_loc = None
     if not bounds:
         bounds = None
     try:
-        cookie_loc = pyautogui.locateOnScreen(cookie_img_file, confidence=0.5,region=bounds)
+        cookie_loc = pyautogui.locateOnScreen(cookie_img_file, confidence=confidence_,region=bounds)
     except pyautogui.ImageNotFoundException:
         print("Error: No Cookie Found Onscreen!")
     except IOError:
         print("Image File Not Found!")
 
+    # pyautogui sometimes returns None instead of throwing the exception
     if not cookie_loc:
         print("No Cookie Found Onscreen!")
     else:
@@ -49,14 +58,14 @@ def on_press_toggle():
     global click_process
     if (not click_process.is_alive()):
         print("Starting Auto Clicker")
-        click_process = multiprocessing.Process(target=click_cookies, args=(bounds))
+        click_process = multiprocessing.Process(target=click_cookies)
         click_process.start()
     else:
         print("Stopping Auto Clicker")
         click_process.terminate()
 
 if __name__ == "__main__":
-    click_process = multiprocessing.Process(target=click_cookies, args=(bounds))
+    click_process = multiprocessing.Process(target=click_cookies)
     main_pid = os.getpid()
     keyboard.add_hotkey(exit_key, on_press_exit, args=[main_pid])
     keyboard.add_hotkey(toggle_key, on_press_toggle)

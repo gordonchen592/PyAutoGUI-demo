@@ -1,7 +1,9 @@
 import keyboard
 import pyautogui
 
-# code starts here
+# Use this to find a pyautogui region easily for reducing the 
+# search area used by locateOnScreen(). ie. multple windows of 
+# cookie clicker open
 def calibrate():
     while True:
         bounds = []
